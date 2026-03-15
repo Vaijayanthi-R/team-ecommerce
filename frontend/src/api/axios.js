@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const BACKEND_URL = 'https://team-ecommerce.onrender.com' 
+
 const api = axios.create({
-  baseURL: "https://team-ecommerce.onrender.com/api"
+  baseURL: `${BACKEND_URL}/api`
 })
 
 api.interceptors.response.use(
@@ -27,7 +29,7 @@ export const productApi = {
   categories:  ()        => api.get('/products/categories'),
   getById:     (id)      => api.get(`/products/${id}`),
   bestSellers: (limit=10)=> api.get('/analytics/best-sellers', { params: { limit } }),
-  imageUrl:    (fileId)  => `${baseURL}/api/products/image/${fileId}`,
+  imageUrl:    (fileId)  => `${BACKEND_URL}/api/products/image/${fileId}`,
 }
 
 // ── Reviews ───────────────────────────────────────────────────────────────────
@@ -87,7 +89,7 @@ export const adminApi = {
   pendingSellers:  ()              => api.get('/admin/sellers/pending'),
   approveSeller:   (id)            => api.put(`/admin/sellers/${id}/approve`),
   rejectSeller:    (id, remarks)   => api.put(`/admin/sellers/${id}/reject`, { remarks }),
-  certUrl:         (fileId)        => `${baseURL}/api/admin/sellers/certificates/${fileId}`,
+  certUrl:         (fileId)        => `${BACKEND_URL}/api/admin/sellers/certificates/${fileId}`,
   // Products — new listings
   pendingProducts: ()              => api.get('/admin/products/pending'),
   approveProduct:  (id)            => api.put(`/admin/products/${id}/approve`),
