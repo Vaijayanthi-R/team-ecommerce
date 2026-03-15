@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply transition-colors duration-200;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 transition-colors duration-200;
+    @apply dark:bg-gray-950 dark:text-gray-100;
+  }
+ /*  */
+  /* Make every page wrapper dark-aware */
+  #root {
+    @apply min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200;
+  }
+
+  /* All headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-gray-900 dark:text-gray-100;
+  }
+
+  /* Tables */
+  table { @apply w-full text-sm; }
+  th    { @apply text-left text-gray-500 dark:text-gray-400 font-medium; }
+  td    { @apply text-gray-700 dark:text-gray-300; }
+  tr    { @apply border-b border-gray-50 dark:border-gray-800; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { @apply w-1.5 h-1.5; }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-gray-300 dark:bg-gray-700 rounded-full; }
+
+  /* Selection */
+  ::selection { @apply bg-primary/20 text-primary; }
+}
+
+@layer components {
+  /* ── Buttons ───────────────────────────────────────────────────────────── */
+  .btn-primary {
+    @apply bg-primary text-white px-4 py-2 rounded-lg font-medium
+           hover:bg-primary-dark transition-colors
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-white text-gray-700 px-4 py-2 rounded-lg font-medium
+           border border-gray-200 hover:bg-gray-50 transition-colors
+           dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700
+           dark:hover:bg-gray-700;
+  }
+  .btn-danger {
+    @apply bg-red-500 text-white px-4 py-2 rounded-lg font-medium
+           hover:bg-red-600 transition-colors;
+  }
+
+  /* ── Card ──────────────────────────────────────────────────────────────── */
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6
+           dark:bg-gray-900 dark:border-gray-800;
+  }
+
+  /* ── Input ─────────────────────────────────────────────────────────────── */
+  .input {
+    @apply w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+           focus:outline-none focus:ring-2 focus:ring-primary/30
+           focus:border-primary transition
+           bg-white text-gray-900 placeholder-gray-400
+           dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100
+           dark:placeholder-gray-500 dark:focus:border-primary;
+  }
+
+  /* ── Page wrapper — use this on every page's outer div ────────────────── */
+  .page {
+    @apply min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200;
+  }
+
+  /* ── Section bg (slightly lighter than page) ──────────────────────────── */
+  .section-bg {
+    @apply bg-white dark:bg-gray-900;
+  }
+
+  /* ── Subtle bg (for filter panels, sidebars) ──────────────────────────── */
+  .subtle-bg {
+    @apply bg-gray-50 dark:bg-gray-800/50;
+  }
+
+  /* ── Divider ───────────────────────────────────────────────────────────── */
+  .divider {
+    @apply border-t border-gray-100 dark:border-gray-800;
+  }
+
+  /* ── Text helpers ──────────────────────────────────────────────────────── */
+  .text-muted   { @apply text-gray-500 dark:text-gray-400; }
+  .text-faint   { @apply text-gray-400 dark:text-gray-500; }
+  .text-primary-color { @apply text-gray-900 dark:text-gray-100; }
+
+  /* ── Pagination button ─────────────────────────────────────────────────── */
+  .page-btn {
+    @apply w-9 h-9 rounded-lg text-sm font-medium transition-colors flex items-center justify-center
+           border border-gray-200 text-gray-700 hover:bg-gray-50
+           dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .page-btn-active {
+    @apply w-9 h-9 rounded-lg text-sm font-medium flex items-center justify-center
+           bg-primary text-white border border-primary;
+  }
+
+  /* ── Filter panel ──────────────────────────────────────────────────────── */
+  .filter-panel {
+    @apply bg-white dark:bg-gray-900 rounded-2xl border border-gray-100
+           dark:border-gray-800 p-5 space-y-5;
+  }
+
+  /* ── Navbar ────────────────────────────────────────────────────────────── */
+  .navbar {
+    @apply bg-white dark:bg-gray-900 border-b border-gray-100
+           dark:border-gray-800 sticky top-0 z-50 transition-colors;
+  }
+
+  /* ── Sidebar ───────────────────────────────────────────────────────────── */
+  .sidebar {
+    @apply bg-white dark:bg-gray-900 border-r border-gray-100
+           dark:border-gray-800 transition-colors;
+  }
+
+  /* ── Status badges ─────────────────────────────────────────────────────── */
+  .badge-pending   { @apply bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium dark:bg-yellow-900/40 dark:text-yellow-300; }
+  .badge-active    { @apply bg-green-100  text-green-800  text-xs px-2 py-1 rounded-full font-medium dark:bg-green-900/40  dark:text-green-300;  }
+  .badge-rejected  { @apply bg-red-100    text-red-800    text-xs px-2 py-1 rounded-full font-medium dark:bg-red-900/40    dark:text-red-300;    }
+  .badge-approved  { @apply bg-blue-100   text-blue-800   text-xs px-2 py-1 rounded-full font-medium dark:bg-blue-900/40   dark:text-blue-300;   }
+  .badge-shipped   { @apply bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full font-medium dark:bg-purple-900/40 dark:text-purple-300; }
+  .badge-delivered { @apply bg-green-100  text-green-800  text-xs px-2 py-1 rounded-full font-medium dark:bg-green-900/40  dark:text-green-300;  }
+  .badge-cancelled { @apply bg-gray-100   text-gray-600   text-xs px-2 py-1 rounded-full font-medium dark:bg-gray-800     dark:text-gray-400;   }
+  .badge-created   { @apply bg-blue-100   text-blue-700   text-xs px-2 py-1 rounded-full font-medium dark:bg-blue-900/40   dark:text-blue-300;   }
+  .badge-confirmed { @apply bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full font-medium dark:bg-indigo-900/40 dark:text-indigo-300; }
+  .badge-update    { @apply bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full font-medium dark:bg-orange-900/40 dark:text-orange-300; }
+}
