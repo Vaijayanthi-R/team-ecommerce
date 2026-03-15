@@ -8,49 +8,46 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
-@Entity
-@Table(name = "orders")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Document(collection = "orders")
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    private double totalAmount;
+    private String userId;
+    private String userEmail;
 
-    private LocalDateTime orderDate;
+    private List<OrderItem> items;           // must have at least one
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderItem> items;
+    private double totalAmount;              // auto-calculated
 
-    public Order() {}
+    @Builder.Default
+    private OrderStatus status = OrderStatus.CREATED;
 
-    public Long getId() {
-        return id;
-    }
+    private String shippingAddress;
+    private String paymentId;                // Stripe payment intent ID
 
-    public double getTotalAmount() {
-        return totalAmount;
-    }
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    public void setTotalAmount(double totalAmount) {
-        this.totalAmount = totalAmount;
-    }
+    private LocalDateTime updatedAt;
 
-    public LocalDateTime getOrderDate() {
-        return orderDate;
-    }
-
-    public void setOrderDate(LocalDateTime orderDate) {
-        this.orderDate = orderDate;
-    }
-
-    public List<OrderItem> getItems() {
-        return items;
-    }
-
-    public void setItems(List<OrderItem> items) {
-        this.items = items;
+    // ─── nested ──────────────────────────────────────────
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class OrderItem {
+        private String productId;
+        private String productName;
+        private String sellerId;
+        private double priceAtPurchase;      // snapshot — immutable after creation
+        private double discountPercent;
+        private int quantity;
+        private double subtotal;             // priceAtPurchase * quantity
     }
 }

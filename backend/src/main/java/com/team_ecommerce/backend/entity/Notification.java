@@ -1,7 +1,5 @@
 package com.team_ecommerce.backend.entity;
 
-package com.team_ecommerce.backend.entity;
-
 import com.team_ecommerce.backend.enums.NotifType;
 import lombok.*;
 import org.springframework.data.annotation.Id;
