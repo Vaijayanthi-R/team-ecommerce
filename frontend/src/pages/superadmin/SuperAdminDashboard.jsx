@@ -1,1 +1,1 @@
-as
+export { SuperAdminDashboard as default } from './SuperAdminPages'

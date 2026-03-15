@@ -1,1 +1,1 @@
-asa
+export { SuperAdminAdmins as default } from './SuperAdminPages'

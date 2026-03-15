@@ -1,1 +1,1 @@
-as
+export { AdminSellers as default } from './AdminPages'

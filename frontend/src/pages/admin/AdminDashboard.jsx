@@ -1,1 +1,1 @@
-ad
+export { AdminDashboard as default } from './AdminPages'
