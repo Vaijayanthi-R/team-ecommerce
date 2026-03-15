@@ -27,4 +27,4 @@ jobs:
       - name: SonarCloud Scan
         run: mvn sonar:sonar
         env:
-          SONAR_TOKEN: ${{ secrets.token }}
+          token: ${{ secrets.token }}
