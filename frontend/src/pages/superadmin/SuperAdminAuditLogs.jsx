@@ -1,1 +1,1 @@
-as
+export { SuperAdminAuditLogs as default } from './SuperAdminPages'
