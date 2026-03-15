@@ -1,13 +1,19 @@
 import axios from 'axios'
 
-const BACKEND_URL = 'https://team-ecommerce.onrender.com' 
+const BACKEND_URL = 'https://team-ecommerce.onrender.com'
 
 const api = axios.create({
   baseURL: `${BACKEND_URL}/api`
 })
 
+// Intercept responses — for JSON unwrap data, for blobs return as-is
 api.interceptors.response.use(
-  res => res.data,
+  res => {
+    // Blob responses (certificate/image downloads) — return the blob directly
+    if (res.config?.responseType === 'blob') return res.data
+    // All other responses — unwrap the .data wrapper
+    return res.data
+  },
   err => {
     const msg = err.response?.data?.message || err.message || 'Something went wrong'
     return Promise.reject(new Error(msg))
@@ -16,23 +22,20 @@ api.interceptors.response.use(
 
 export default api
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
 export const authApi = {
   register: (data) => api.post('/auth/register', data),
   login:    (data) => api.post('/auth/login', data),
 }
 
-// ── Products (public) ─────────────────────────────────────────────────────────
 export const productApi = {
-  list:        (search)  => api.get('/products', { params: search ? { search } : {} }),
-  filter:      (params)  => api.get('/products/filter', { params }),
-  categories:  ()        => api.get('/products/categories'),
-  getById:     (id)      => api.get(`/products/${id}`),
-  bestSellers: (limit=10)=> api.get('/analytics/best-sellers', { params: { limit } }),
-  imageUrl:    (fileId)  => `${BACKEND_URL}/api/products/image/${fileId}`,
+  list:        (search)   => api.get('/products', { params: search ? { search } : {} }),
+  filter:      (params)   => api.get('/products/filter', { params }),
+  categories:  ()         => api.get('/products/categories'),
+  getById:     (id)       => api.get(`/products/${id}`),
+  bestSellers: (limit=10) => api.get('/analytics/best-sellers', { params: { limit } }),
+  imageUrl:    (fileId)   => `${BACKEND_URL}/api/products/image/${fileId}`,
 }
 
-// ── Reviews ───────────────────────────────────────────────────────────────────
 export const reviewApi = {
   getForProduct:    (productId)                  => api.get(`/reviews/product/${productId}`),
   checkEligibility: (productId)                  => api.get(`/reviews/product/${productId}/eligibility`),
@@ -42,7 +45,6 @@ export const reviewApi = {
   mine:             ()                           => api.get('/reviews/mine'),
 }
 
-// ── User ──────────────────────────────────────────────────────────────────────
 export const userApi = {
   me:               ()          => api.get('/user/me'),
   getWishlist:      ()          => api.get('/user/wishlist'),
@@ -51,7 +53,6 @@ export const userApi = {
   getNotifications: ()          => api.get('/user/notifications'),
 }
 
-// ── Orders ────────────────────────────────────────────────────────────────────
 export const orderApi = {
   create:    (data)       => api.post('/orders', data),
   myOrders:  ()           => api.get('/orders'),
@@ -61,46 +62,39 @@ export const orderApi = {
   setStatus: (id, status) => api.patch(`/orders/${id}/status`, null, { params: { status } }),
 }
 
-// ── Payments ──────────────────────────────────────────────────────────────────
 export const paymentApi = {
   initiate: (orderId) => api.post('/payments/initiate', { orderId }),
 }
 
-// ── Seller ────────────────────────────────────────────────────────────────────
 export const sellerApi = {
-  getProfile:       ()         => api.get('/seller/profile'),
-  updateProfile:    (data)     => api.put('/seller/profile', data),
-  uploadCert:       (fd)       => api.post('/seller/certificates', fd),
-  myProducts:       ()         => api.get('/seller/products'),
-  addProduct:       (fd)       => api.post('/seller/products', fd),
-  submitUpdate:     (id, fd)   => api.put(`/seller/products/${id}/update`, fd),
-  deleteProduct:    (id)       => api.delete(`/seller/products/${id}`),
-  getWallet:        ()         => api.get('/seller/wallet'),
-  getTransactions:  ()         => api.get('/seller/wallet/transactions'),
-  getAnalytics:     ()         => api.get('/seller/analytics'),
-  getNotifications: ()         => api.get('/seller/notifications'),
-  markNotifRead:    (id)       => api.put(`/seller/notifications/${id}/read`),
+  getProfile:       ()       => api.get('/seller/profile'),
+  updateProfile:    (data)   => api.put('/seller/profile', data),
+  uploadCert:       (fd)     => api.post('/seller/certificates', fd),
+  myProducts:       ()       => api.get('/seller/products'),
+  addProduct:       (fd)     => api.post('/seller/products', fd),
+  submitUpdate:     (id, fd) => api.put(`/seller/products/${id}/update`, fd),
+  deleteProduct:    (id)     => api.delete(`/seller/products/${id}`),
+  getWallet:        ()       => api.get('/seller/wallet'),
+  getTransactions:  ()       => api.get('/seller/wallet/transactions'),
+  getAnalytics:     ()       => api.get('/seller/analytics'),
+  getNotifications: ()       => api.get('/seller/notifications'),
+  markNotifRead:    (id)     => api.put(`/seller/notifications/${id}/read`),
 }
 
-// ── Admin ─────────────────────────────────────────────────────────────────────
 export const adminApi = {
-  // Sellers
   allSellers:      ()              => api.get('/admin/sellers'),
   pendingSellers:  ()              => api.get('/admin/sellers/pending'),
   approveSeller:   (id)            => api.put(`/admin/sellers/${id}/approve`),
   rejectSeller:    (id, remarks)   => api.put(`/admin/sellers/${id}/reject`, { remarks }),
   certUrl:         (fileId)        => `${BACKEND_URL}/api/admin/sellers/certificates/${fileId}`,
-  // Products — new listings
   pendingProducts: ()              => api.get('/admin/products/pending'),
   approveProduct:  (id)            => api.put(`/admin/products/${id}/approve`),
   rejectProduct:   (id, remarks)   => api.put(`/admin/products/${id}/reject`, { remarks }),
-  // Products — seller update requests
   pendingUpdates:  ()              => api.get('/admin/products/pending-updates'),
   approveUpdate:   (id)            => api.put(`/admin/products/${id}/approve-update`),
   rejectUpdate:    (id, remarks)   => api.put(`/admin/products/${id}/reject-update`, { remarks }),
 }
 
-// ── Super Admin ───────────────────────────────────────────────────────────────
 export const superAdminApi = {
   createAdmin:   (data) => api.post('/super-admin/admins', data),
   listAdmins:    ()     => api.get('/super-admin/admins'),
