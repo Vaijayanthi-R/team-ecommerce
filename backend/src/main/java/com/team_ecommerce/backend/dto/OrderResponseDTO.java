@@ -1,28 +1,27 @@
-package com.team_ecommerce.backend.entity;
+package com.team_ecommerce.backend.dto;
 
-import jakarta.persistence.*;
-import java.util.List;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "orders")
-public class Order {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class OrderResponseDTO {
     private Long id;
-
     private double totalAmount;
-
     private LocalDateTime orderDate;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderItem> items;
+    public OrderResponseDTO() {
+    }
 
-    public Order() {}
+    public OrderResponseDTO(Long id, double totalAmount, LocalDateTime orderDate) {
+        this.id = id;
+        this.totalAmount = totalAmount;
+        this.orderDate = orderDate;
+    }
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public double getTotalAmount() {
@@ -39,13 +38,5 @@ public class Order {
 
     public void setOrderDate(LocalDateTime orderDate) {
         this.orderDate = orderDate;
-    }
-
-    public List<OrderItem> getItems() {
-        return items;
-    }
-
-    public void setItems(List<OrderItem> items) {
-        this.items = items;
     }
 }
