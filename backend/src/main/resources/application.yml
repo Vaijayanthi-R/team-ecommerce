@@ -42,7 +42,7 @@ app:
     shipping-fee: 50.0
     best-seller-limit: 10
 
-  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  frontend-url: ${FRONTEND_URL:https://team-ecommerce-alpha.vercel.app}
 
 logging:
   level:
