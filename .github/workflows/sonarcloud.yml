@@ -1,0 +1,30 @@
+name: SonarCloud
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Build project
+        run: mvn clean verify
+
+      - name: SonarCloud Scan
+        run: mvn sonar:sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.token }}
