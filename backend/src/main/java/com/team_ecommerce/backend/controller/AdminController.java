@@ -58,7 +58,7 @@ class AdminController {
         String ct   = sellerService.getCertContentType(fileId);
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType(ct))
-            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=certificate")
+            .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400") 
             .body(data);
     }
  
