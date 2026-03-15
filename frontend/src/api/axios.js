@@ -87,7 +87,7 @@ export const adminApi = {
   pendingSellers:  ()              => api.get('/admin/sellers/pending'),
   approveSeller:   (id)            => api.put(`/admin/sellers/${id}/approve`),
   rejectSeller:    (id, remarks)   => api.put(`/admin/sellers/${id}/reject`, { remarks }),
-  certUrl:         (fileId)        => `/api/admin/sellers/certificates/${fileId}`,
+  certUrl:         (fileId)        => `${baseURL}/api/admin/sellers/certificates/${fileId}`,
   // Products — new listings
   pendingProducts: ()              => api.get('/admin/products/pending'),
   approveProduct:  (id)            => api.put(`/admin/products/${id}/approve`),
