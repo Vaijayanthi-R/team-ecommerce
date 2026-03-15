@@ -1,5 +1,5 @@
 package com.team_ecommerce.backend.controller;
 
-public class ReportController {
+public class AdminController {
     
 }

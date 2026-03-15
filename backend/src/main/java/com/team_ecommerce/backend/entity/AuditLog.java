@@ -1,5 +1,5 @@
 package com.team_ecommerce.backend.entity;
 
-public class OrderStatus {
+public class AuditLog {
     
 }
