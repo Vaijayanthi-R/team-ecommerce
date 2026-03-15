@@ -8,46 +8,49 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Document(collection = "orders")
+
+@Entity
+@Table(name = "orders")
 public class Order {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private String userId;
-    private String userEmail;
+    private double totalAmount;
 
-    private List<OrderItem> items;           // must have at least one
+    private LocalDateTime orderDate;
 
-    private double totalAmount;              // auto-calculated
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<OrderItem> items;
 
-    @Builder.Default
-    private OrderStatus status = OrderStatus.CREATED;
+    public Order() {}
 
-    private String shippingAddress;
-    private String paymentId;                // Stripe payment intent ID
+    public Long getId() {
+        return id;
+    }
 
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    public double getTotalAmount() {
+        return totalAmount;
+    }
 
-    private LocalDateTime updatedAt;
+    public void setTotalAmount(double totalAmount) {
+        this.totalAmount = totalAmount;
+    }
 
-    // ─── nested ──────────────────────────────────────────
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class OrderItem {
-        private String productId;
-        private String productName;
-        private String sellerId;
-        private double priceAtPurchase;      // snapshot — immutable after creation
-        private double discountPercent;
-        private int quantity;
-        private double subtotal;             // priceAtPurchase * quantity
+    public LocalDateTime getOrderDate() {
+        return orderDate;
+    }
+
+    public void setOrderDate(LocalDateTime orderDate) {
+        this.orderDate = orderDate;
+    }
+
+    public List<OrderItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<OrderItem> items) {
+        this.items = items;
     }
 }
