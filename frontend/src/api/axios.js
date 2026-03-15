@@ -27,7 +27,7 @@ export const productApi = {
   categories:  ()        => api.get('/products/categories'),
   getById:     (id)      => api.get(`/products/${id}`),
   bestSellers: (limit=10)=> api.get('/analytics/best-sellers', { params: { limit } }),
-  imageUrl:    (fileId)  => `/api/products/image/${fileId}`,
+  imageUrl:    (fileId)  => `${baseURL}/api/products/image/${fileId}`,
 }
 
 // ── Reviews ───────────────────────────────────────────────────────────────────
