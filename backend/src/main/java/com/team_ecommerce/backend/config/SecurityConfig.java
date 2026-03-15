@@ -76,7 +76,6 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
  
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.setAllowCredentials(true);
         config.addAllowedOrigin("https://team-ecommerce-alpha.vercel.app");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
