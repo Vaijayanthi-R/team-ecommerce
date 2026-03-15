@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { DashboardLayout, KpiCard, StatusBadge, Spinner, Empty } from '../../components/Layout'
 import { adminApi, orderApi } from '../../api/axios'
+import api from '../../api/axios'
 import { Users, Store, ClipboardList, CheckCircle, XCircle, Eye, FileText, Package } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -56,99 +57,191 @@ export function AdminDashboard() {
     </DashboardLayout>
   )
 }
-
-// ── Certificate Viewer Modal ──────────────────────────────────────────────────
+// ── Certificate viewer — fetches via Axios (carries auth token) ───────────────
 function CertModal({ certs, onClose }) {
-  const [active, setActive] = useState(0)
-  if (!certs?.length) return null
+  const [active,   setActive]   = useState(0)
+  const [blobUrl,  setBlobUrl]  = useState(null)
+  const [mimeType, setMimeType] = useState(null)
+  const [loading,  setLoading]  = useState(true)
+  const [error,    setError]    = useState(null)
+ 
   const cert = certs[active]
-  const url  = adminApi.certUrl(cert.fileId)
-
+ 
+  // Whenever the active cert changes, fetch it as a blob through Axios
+  useEffect(() => {
+    if (!cert) return
+ 
+    // Revoke previous blob URL to free memory
+    if (blobUrl) URL.revokeObjectURL(blobUrl)
+    setBlobUrl(null)
+    setLoading(true)
+    setError(null)
+ 
+    // Use the Axios instance — it automatically sends the Authorization header
+    api.get(`/admin/sellers/certificates/${cert.fileId}`, {
+      responseType: 'blob'
+    })
+    .then(blob => {
+      const mime = blob.type || 'application/octet-stream'
+      const url  = URL.createObjectURL(blob)
+      setMimeType(mime)
+      setBlobUrl(url)
+    })
+    .catch(err => {
+      setError(err.message)
+    })
+    .finally(() => setLoading(false))
+ 
+    // Cleanup on unmount
+    return () => { if (blobUrl) URL.revokeObjectURL(blobUrl) }
+  }, [active, cert?.fileId])
+ 
+  const handleDownload = () => {
+    if (!blobUrl) return
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = cert.fileName || `certificate-${cert.certType}`
+    a.click()
+  }
+ 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="font-bold text-gray-900">📄 Certificates</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl">✕</button>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+ 
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+          <h2 className="font-bold text-gray-900 dark:text-gray-100">📄 Certificates</h2>
+          <div className="flex items-center gap-2">
+            {blobUrl && (
+              <button onClick={handleDownload}
+                className="flex items-center gap-1.5 text-xs text-primary hover:underline px-2 py-1">
+                <Download size={13} /> Download
+              </button>
+            )}
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+              <X size={20} />
+            </button>
+          </div>
         </div>
-
-        {/* Tab strip */}
+ 
+        {/* Tab strip — multiple certs */}
         {certs.length > 1 && (
           <div className="flex gap-2 px-6 pt-4 flex-wrap">
             {certs.map((c, i) => (
               <button key={i} onClick={() => setActive(i)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors
-                  ${active === i ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                  ${active === i
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
                 {c.certType}
               </button>
             ))}
           </div>
         )}
-
-        <div className="flex-1 overflow-hidden p-6">
-          <div className="mb-3 flex items-center gap-3">
-            <span className="text-sm font-medium text-gray-700">{cert.certType}</span>
-            <span className="text-xs text-gray-400">{cert.fileName}</span>
-            <span className="text-xs text-gray-400">Uploaded {new Date(cert.uploadedAt).toLocaleDateString()}</span>
-            <a href={url} target="_blank" rel="noreferrer"
-              className="text-xs text-primary hover:underline ml-auto">Open in new tab ↗</a>
-          </div>
-
-          {/* Inline viewer — PDF iframe or image */}
-          {cert.fileName?.match(/\.(pdf)$/i) ? (
-            <iframe src={url} className="w-full h-96 rounded-lg border" title={cert.certType} />
-          ) : (
-            <img src={url} alt={cert.certType} className="max-h-96 rounded-lg border object-contain mx-auto block" />
+ 
+        {/* Cert info row */}
+        <div className="px-6 py-3 flex items-center gap-3 bg-gray-50 dark:bg-gray-800/50">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{cert.certType}</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">{cert.fileName}</span>
+          {cert.uploadedAt && (
+            <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">
+              Uploaded {new Date(cert.uploadedAt).toLocaleDateString()}
+            </span>
+          )}
+        </div>
+ 
+        {/* Viewer */}
+        <div className="flex-1 overflow-hidden p-4 min-h-0">
+          {loading && (
+            <div className="flex flex-col items-center justify-center h-64 gap-3">
+              <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+              <p className="text-sm text-gray-400 dark:text-gray-500">Loading certificate…</p>
+            </div>
+          )}
+ 
+          {error && (
+            <div className="flex flex-col items-center justify-center h-64 gap-3 text-red-500">
+              <p className="font-medium">Failed to load certificate</p>
+              <p className="text-xs text-gray-400">{error}</p>
+            </div>
+          )}
+ 
+          {!loading && !error && blobUrl && (
+            mimeType?.includes('pdf') ? (
+              <iframe
+                src={blobUrl}
+                className="w-full h-[500px] rounded-lg border border-gray-200 dark:border-gray-700"
+                title={cert.certType}
+              />
+            ) : (
+              <div className="flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-xl p-4 min-h-[300px]">
+                <img
+                  src={blobUrl}
+                  alt={cert.certType}
+                  className="max-h-[460px] max-w-full rounded-lg object-contain"
+                />
+              </div>
+            )
           )}
         </div>
       </div>
     </div>
   )
 }
-
+ 
 // ── Reject Modal ──────────────────────────────────────────────────────────────
 function RejectModal({ title, onConfirm, onClose }) {
   const [remarks, setRemarks] = useState('')
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-        <h2 className="font-bold text-gray-900 mb-4">Reject — {title}</h2>
-        <textarea className="input mb-4" rows={4} placeholder="Reason for rejection (required)…"
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-6">
+        <h2 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Reject — {title}</h2>
+        <textarea className="input mb-4" rows={4}
+          placeholder="Reason for rejection (required)…"
           value={remarks} onChange={e => setRemarks(e.target.value)} />
         <div className="flex gap-3">
-          <button onClick={() => { if (!remarks.trim()) { toast.error('Please provide a reason'); return } onConfirm(remarks) }}
-            className="btn-danger flex-1">Confirm Rejection</button>
+          <button
+            onClick={() => {
+              if (!remarks.trim()) { toast.error('Please provide a reason'); return }
+              onConfirm(remarks)
+            }}
+            className="btn-danger flex-1">
+            Confirm Rejection
+          </button>
           <button onClick={onClose} className="btn-secondary flex-1">Cancel</button>
         </div>
       </div>
     </div>
   )
 }
-
+ 
 // ── Admin Sellers ─────────────────────────────────────────────────────────────
-export function AdminSellers() {
-  const [sellers,    setSellers]    = useState([])
-  const [loading,    setLoading]    = useState(true)
-  const [certModal,  setCertModal]  = useState(null)   // certs array
-  const [rejectTarget, setRejectTarget] = useState(null) // { id, name }
-  const [tab, setTab] = useState('PENDING')
-
+export default function AdminSellers() {
+  const [sellers,      setSellers]      = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [certModal,    setCertModal]    = useState(null)
+  const [rejectTarget, setRejectTarget] = useState(null)
+  const [tab,          setTab]          = useState('PENDING')
+ 
   useEffect(() => {
-    adminApi.allSellers().then(r => setSellers(r.data)).finally(() => setLoading(false))
+    adminApi.allSellers()
+      .then(r => setSellers(r.data || []))
+      .catch(err => toast.error(err.message))
+      .finally(() => setLoading(false))
   }, [])
-
+ 
   const filtered = sellers.filter(s => tab === 'ALL' || s.status === tab)
-
-  const approve = async (id) => {
+ 
+  const approve = async id => {
     try {
       const res = await adminApi.approveSeller(id)
       setSellers(s => s.map(x => x.id === id ? res.data : x))
       toast.success('Seller approved!')
     } catch (err) { toast.error(err.message) }
   }
-
+ 
   const reject = async (id, remarks) => {
     try {
       const res = await adminApi.rejectSeller(id, remarks)
@@ -157,72 +250,104 @@ export function AdminSellers() {
       toast.success('Seller rejected')
     } catch (err) { toast.error(err.message) }
   }
-
+ 
   return (
     <DashboardLayout role="ADMIN">
-      {certModal  && <CertModal certs={certModal} onClose={() => setCertModal(null)} />}
+      {certModal    && <CertModal certs={certModal} onClose={() => setCertModal(null)} />}
       {rejectTarget && (
-        <RejectModal title={rejectTarget.name}
+        <RejectModal
+          title={rejectTarget.name}
           onConfirm={r => reject(rejectTarget.id, r)}
           onClose={() => setRejectTarget(null)} />
       )}
-
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Seller Verification</h1>
-
+ 
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+        Seller Verification
+      </h1>
+ 
       {/* Tab filter */}
-      <div className="flex gap-2 mb-6">
-        {['PENDING','APPROVED','REJECTED','ALL'].map(t => (
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {['PENDING', 'APPROVED', 'REJECTED', 'ALL'].map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors
-              ${tab === t ? 'bg-primary text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
-            {t} {t !== 'ALL' && `(${sellers.filter(s => s.status === t).length})`}
+              ${tab === t
+                ? 'bg-primary text-white'
+                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+            {t}
+            {t !== 'ALL' && (
+              <span className="ml-1.5 text-xs opacity-70">
+                ({sellers.filter(s => s.status === t).length})
+              </span>
+            )}
           </button>
         ))}
       </div>
-
-      {loading ? <Spinner /> : filtered.length === 0 ? <Empty message={`No ${tab.toLowerCase()} sellers`} /> : (
+ 
+      {loading ? <Spinner /> : filtered.length === 0 ? (
+        <Empty message={`No ${tab.toLowerCase()} sellers`} />
+      ) : (
         <div className="space-y-4">
           {filtered.map(seller => (
             <div key={seller.id} className="card">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <h3 className="font-bold text-gray-900">{seller.businessName || 'Unnamed Business'}</h3>
+                  <div className="flex items-center gap-3 mb-1 flex-wrap">
+                    <h3 className="font-bold text-gray-900 dark:text-gray-100">
+                      {seller.businessName || 'Unnamed Business'}
+                    </h3>
                     <StatusBadge status={seller.status} />
                   </div>
-                  <p className="text-sm text-gray-500">{seller.businessEmail} · {seller.phone}</p>
-                  <p className="text-sm text-gray-400">{seller.address}</p>
-                  {seller.gstNumber && <p className="text-xs text-gray-400 mt-1">GST: {seller.gstNumber}</p>}
-                  {seller.adminRemarks && (
-                    <p className="text-xs text-red-500 mt-1">Rejection reason: {seller.adminRemarks}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {seller.businessEmail}{seller.phone ? ` · ${seller.phone}` : ''}
+                  </p>
+                  {seller.address && (
+                    <p className="text-sm text-gray-400 dark:text-gray-500">{seller.address}</p>
                   )}
-                  <p className="text-xs text-gray-400 mt-1">
+                  {seller.gstNumber && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      GST: {seller.gstNumber}
+                    </p>
+                  )}
+                  {seller.adminRemarks && (
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                      Rejection reason: {seller.adminRemarks}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                     Registered {new Date(seller.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-
-                <div className="flex flex-col gap-2 items-end">
-                  {/* Certificates button */}
+ 
+                <div className="flex flex-col gap-2 items-end flex-shrink-0">
+                  {/* Certificate button */}
                   {seller.certificates?.length > 0 ? (
-                    <button onClick={() => setCertModal(seller.certificates)}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm hover:bg-blue-100 transition-colors">
+                    <button
+                      onClick={() => setCertModal(seller.certificates)}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20
+                                 text-blue-700 dark:text-blue-400 rounded-lg text-sm
+                                 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
                       <FileText size={14} />
                       View {seller.certificates.length} Certificate{seller.certificates.length > 1 ? 's' : ''}
                     </button>
                   ) : (
-                    <span className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg">
+                    <span className="text-xs text-amber-600 dark:text-amber-400
+                                     bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-lg">
                       ⚠ No certificates uploaded
                     </span>
                   )}
-
+ 
                   {seller.status === 'PENDING' && (
                     <div className="flex gap-2">
                       <button onClick={() => approve(seller.id)}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm hover:bg-green-100">
+                        className="flex items-center gap-1 px-3 py-1.5 bg-green-50 dark:bg-green-900/20
+                                   text-green-700 dark:text-green-400 rounded-lg text-sm
+                                   hover:bg-green-100 dark:hover:bg-green-900/30">
                         <CheckCircle size={14} /> Approve
                       </button>
                       <button onClick={() => setRejectTarget({ id: seller.id, name: seller.businessName })}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100">
+                        className="flex items-center gap-1 px-3 py-1.5 bg-red-50 dark:bg-red-900/20
+                                   text-red-700 dark:text-red-400 rounded-lg text-sm
+                                   hover:bg-red-100 dark:hover:bg-red-900/30">
                         <XCircle size={14} /> Reject
                       </button>
                     </div>
