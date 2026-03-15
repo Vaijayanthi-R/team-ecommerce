@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+backend/src/main/resources/application.yml
+build_log_v2.txt
+build_log.txt
+
+.env
