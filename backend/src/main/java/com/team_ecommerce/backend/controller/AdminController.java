@@ -58,7 +58,7 @@ class AdminController {
         String ct   = sellerService.getCertContentType(fileId);
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType(ct))
-            header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=certificate")
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=certificate")
             .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store")
             .header("Access-Control-Allow-Origin", "*")
             .header("Access-Control-Allow-Headers", "Authorization, Content-Type")
