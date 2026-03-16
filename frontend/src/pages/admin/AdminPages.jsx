@@ -218,7 +218,7 @@ function RejectModal({ title, onConfirm, onClose }) {
 }
  
 // ── Admin Sellers ─────────────────────────────────────────────────────────────
-export default function AdminSellers() {
+export function AdminSellers() {
   const [sellers,      setSellers]      = useState([])
   const [loading,      setLoading]      = useState(true)
   const [certModal,    setCertModal]    = useState(null)
